@@ -1,0 +1,19 @@
+{
+    "name": "Pinch Master Pro - تحلیل تکنولوژی پینچ",
+    "short_name": "Pinch Master",
+    "description": "نرم‌افزار جامع تحلیل تکنولوژی پینچ - Hossein Sahraei",
+    "author": "Hossein Sahraei",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "any",
+    "theme_color": "#667eea",
+    "background_color": "#f5f7fa",
+    "lang": "fa",
+    "dir": "rtl",
+    "categories": ["productivity", "education", "utilities"],
+    "icons": [
+        { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+        { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    ]
+}

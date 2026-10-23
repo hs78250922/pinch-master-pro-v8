@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Pinch Master Pro v8.0 - Professional Pinch Analysis | Hossein Sahraei">
+    <meta name="author" content="Hossein Sahraei">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Pinch Master Pro v8.0 | Hossein Sahraei</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+    <h1>🏭 Pinch Master Pro</h1>
+    <p data-i18n="subtitle">نرم‌افزار جامع تحلیل تکنولوژی پینچ</p>
+    <span class="hero-badge">v8.0 Pro | By Hossein Sahraei</span>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <h3>⚙️ <span data-i18n="settings">تنظیمات</span></h3>
+            <label for="dtmin" data-i18n="dtmin">ΔTmin (°C)</label>
+            <input type="number" id="dtmin" value="10" step="1" min="0.1" onchange="App.calculate()">
+        </div>
+
+        <div class="sidebar-section">
+            <h3>🌐 <span data-i18n="language">زبان</span></h3>
+            <select id="lang-select" class="select-input" onchange="App.changeLanguage(this.value)" style="color:white; background:rgba(255,255,255,0.1);">
+                <option value="fa">🇮🇷 فارسی</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>📏 <span data-i18n="units">واحدها</span></h3>
+            <select id="unit-select" class="select-input" onchange="App.changeUnits(this.value)" style="color:white; background:rgba(255,255,255,0.1);">
+                <option value="kW">kW / °C</option>
+                <option value="MW">MW / °C</option>
+            </select>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>📚 <span data-i18n="examples">مثال‌ها</span></h3>
+            <button class="btn-example" onclick="App.loadExample(4)">🔵 <span data-i18n="ex4">۴ جریانه (Kemp)</span></button>
+            <button class="btn-example" onclick="App.loadExample(7)">🟣 <span data-i18n="ex7">۷ جریانه (PDF)</span></button>
+            <button class="btn-example danger" onclick="App.clearData()">🗑️ <span data-i18n="clearAll">پاک کردن</span></button>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>💾 <span data-i18n="project">پروژه</span></h3>
+            <button class="btn-example" onclick="App.saveProject()">💾 <span data-i18n="save">ذخیره</span></button>
+            <button class="btn-example" onclick="App.exportProject()">📤 <span data-i18n="export">خروجی JSON</span></button>
+            <button class="btn-example" onclick="document.getElementById('import-file').click()">📥 <span data-i18n="import">ورود JSON</span></button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.importProject(this.files[0])">
+        </div>
+
+        <div class="sidebar-section">
+            <h3>📊 <span data-i18n="status">وضعیت</span></h3>
+            <div class="stat-box">
+                <span class="stat-label" data-i18n="streams">جریان</span>
+                <span class="stat-value" id="stat-count">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label" data-i18n="hotcold">گرم/سرد</span>
+                <span class="stat-value" id="stat-hotcold">0 / 0</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>❓ <span data-i18n="help">راهنما</span></h3>
+            <button class="btn-example" onclick="App.showHelp()">📖 <span data-i18n="openHelp">راهنمای کامل</span></button>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>👨‍💻 <span data-i18n="developer">توسعه‌دهنده</span></h3>
+            <div class="author-card">
+                <div class="author-avatar">HS</div>
+                <div class="author-info">
+                    <div class="author-name">Hossein Sahraei</div>
+                    <div class="author-role">Chemical Engineer</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="data">✍️ <span data-i18n="tabData">داده‌ها</span></button>
+            <button class="tab-btn" data-tab="pta">📊 <span data-i18n="tabPTA">جدول مسئله</span></button>
+            <button class="tab-btn" data-tab="curves">📈 <span data-i18n="tabCurves">منحنی‌ها</span></button>
+            <button class="tab-btn" data-tab="grid">🕸️ <span data-i18n="tabGrid">پنجره‌ای</span></button>
+            <button class="tab-btn" data-tab="hen">🔄 <span data-i18n="tabHEN">طراحی HEN</span></button>
+            <button class="tab-btn" data-tab="supertarget">🎯 <span data-i18n="tabSuper">Supertargeting</span></button>
+            <button class="tab-btn" data-tab="utilities">♨️ <span data-i18n="tabUtils">یوتیلیتی چندسطحی</span></button>
+            <button class="tab-btn" data-tab="process">🔧 <span data-i18n="tabProcess">تغییر فرآیند</span></button>
+            <button class="tab-btn" data-tab="exergy">♻️ <span data-i18n="tabExergy">اکسرژی</span></button>
+            <button class="tab-btn" data-tab="equip">⚙️ <span data-i18n="tabEquip">تجهیزات</span></button>
+            <button class="tab-btn" data-tab="dist">🏗️ <span data-i18n="tabDist">تقطیر</span></button>
+            <button class="tab-btn" data-tab="chp">⚡ <span data-i18n="tabCHP">CHP</span></button>
+            <button class="tab-btn" data-tab="ref">❄️ <span data-i18n="tabRef">تبرید و آب</span></button>
+            <button class="tab-btn" data-tab="report">📄 <span data-i18n="tabReport">گزارش</span></button>
+        </nav>
+
+        <div class="tab-content">
+
+            <!-- TAB 1: DATA -->
+            <section id="tab-data" class="tab-pane active">
+                <h2>✍️ <span data-i18n="dataTitle">ورود داده‌های جریان</span></h2>
+                <p class="hint">
+                    🔥 <strong>Hot:</strong> Ts &gt; Tt &nbsp;|&nbsp;
+                    ❄️ <strong>Cold:</strong> Ts &lt; Tt &nbsp;|&nbsp;
+                    <strong>CP</strong> &gt; 0
+                </p>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="colName">نام</th>
+                                <th data-i18n="colTs">Ts (°C)</th>
+                                <th data-i18n="colTt">Tt (°C)</th>
+                                <th data-i18n="colCP">CP (kW/K)</th>
+                                <th data-i18n="colH">h (kW/m²K)</th>
+                                <th data-i18n="colType">نوع</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="streams-body"></tbody>
+                    </table>
+                </div>
+                <div class="actions">
+                    <button class="btn-primary" onclick="App.addRow()">➕ <span data-i18n="addRow">افزودن</span></button>
+                    <button class="btn-success" onclick="App.calculate()">✅ <span data-i18n="calculate">محاسبه</span></button>
+                </div>
+            </section>
+
+            <!-- TAB 2: PTA -->
+            <section id="tab-pta" class="tab-pane">
+                <h2>📊 <span data-i18n="ptaTitle">جدول مسئله و کاسکاد</span></h2>
+                <div id="pta-metrics" class="metrics"></div>
+                <div id="pta-table-wrap" class="table-wrap"></div>
+                <div class="actions">
+                    <button class="btn-primary" onclick="App.exportTableCSV('pta')">📥 <span data-i18n="exportCSV">خروجی CSV</span></button>
+                </div>
+                <div id="cascade-chart" class="chart-container"></div>
+            </section>
+
+            <!-- TAB 3: CURVES -->
+            <section id="tab-curves" class="tab-pane">
+                <h2>📈 <span data-i18n="curvesTitle">منحنی‌های ترکیبی و جامع</span></h2>
+                <div id="composite-chart" class="chart-container"></div>
+                <div id="gcc-chart" class="chart-container"></div>
+                <div id="balanced-gcc-chart" class="chart-container"></div>
+            </section>
+
+            <!-- TAB 4: GRID -->
+            <section id="tab-grid" class="tab-pane">
+                <h2>🕸️ <span data-i18n="gridTitle">نمودار پنجره‌ای</span></h2>
+                <div id="grid-chart" class="chart-container"></div>
+            </section>
+
+            <!-- TAB 5: HEN DESIGN -->
+            <section id="tab-hen" class="tab-pane">
+                <h2>🔄 <span data-i18n="henTitle">طراحی شبکه مبدل‌ها (HEN)</span></h2>
+                <p class="hint" data-i18n="henHint">
+                    طراحی از پینچ شروع می‌شود. بالای پینچ: CPhot ≤ CPcold | پایین پینچ: CPhot ≥ CPcold
+                </p>
+                <div class="form-grid">
+                    <div><label data-i18n="hHot">ضریب h گرم (kW/m²K)</label><input type="number" id="hen-hhot" value="0.5" step="0.1"></div>
+                    <div><label data-i18n="hCold">ضریب h سرد (kW/m²K)</label><input type="number" id="hen-hcold" value="0.5" step="0.1"></div>
+                </div>
+                <button class="btn-primary" onclick="App.designHEN()">🔄 <span data-i18n="designHEN">طراحی شبکه</span></button>
+                <div id="hen-summary" class="metrics" style="margin-top:20px;"></div>
+                <div id="hen-matches-wrap" class="table-wrap"></div>
+                <div id="hen-utilities-wrap" class="table-wrap"></div>
+            </section>
+
+            <!-- TAB 6: SUPERTARGETING -->
+            <section id="tab-supertarget" class="tab-pane">
+                <h2>🎯 <span data-i18n="superTitle">Supertargeting - یافتن ΔTmin بهینه</span></h2>
+                <p class="hint" data-i18n="superHint">
+                    محاسبه نقطه بهینه اقتصادی بر اساس تعادل هزینه انرژی و سرمایه‌گذاری
+                </p>
+                <div class="form-grid">
+                    <div><label data-i18n="hHotFilm">ضریب h گرم (kW/m²K)</label><input type="number" id="st-hhot" value="0.5" step="0.1"></div>
+                    <div><label data-i18n="hColdFilm">ضریب h سرد (kW/m²K)</label><input type="number" id="st-hcold" value="0.5" step="0.1"></div>
+                    <div><label data-i18n="energyCost">هزینه انرژی (€/kWh)</label><input type="number" id="st-ecost" value="0.03" step="0.001"></div>
+                    <div><label data-i18n="annualHours">ساعات کار سالانه</label><input type="number" id="st-hours" value="8000"></div>
+                    <div><label data-i18n="capitalA">ضریب a (هزینه ثابت)</label><input type="number" id="st-ca" value="10000"></div>
+                    <div><label data-i18n="capitalB">ضریب b (هزینه بر واحد سطح)</label><input type="number" id="st-cb" value="500"></div>
+                    <div><label data-i18n="capitalC">ضریب c (توان)</label><input type="number" id="st-cc" value="0.8" step="0.01"></div>
+                    <div><label data-i18n="payback">دوره بازگشت (سال)</label><input type="number" id="st-payback" value="3"></div>
+                </div>
+                <button class="btn-primary" onclick="App.calculateSupertarget()">🎯 <span data-i18n="runSuper">محاسبه Supertargeting</span></button>
+                <div id="st-results" class="metrics" style="margin-top:20px;"></div>
+                <div id="st-chart" class="chart-container"></div>
+            </section>
+
+            <!-- TAB 7: MULTI-LEVEL UTILITIES -->
+            <section id="tab-utilities" class="tab-pane">
+                <h2>♨️ <span data-i18n="utilTitle">یوتیلیتی چندسطحی</span></h2>
+                <p class="hint" data-i18n="utilHint">
+                    تعریف سطوح مختلف بخار (HP/MP/LP) و انتخاب بهینه از روی GCC
+                </p>
+                <div class="form-grid">
+                    <div><label>HP Steam (°C)</label><input type="number" id="util-hp" value="250"></div>
+                    <div><label>HP Steam (€/GJ)</label><input type="number" id="util-hp-cost" value="12" step="0.5"></div>
+                    <div><label>MP Steam (°C)</label><input type="number" id="util-mp" value="180"></div>
+                    <div><label>MP Steam (€/GJ)</label><input type="number" id="util-mp-cost" value="9" step="0.5"></div>
+                    <div><label>LP Steam (°C)</label><input type="number" id="util-lp" value="130"></div>
+                    <div><label>LP Steam (€/GJ)</label><input type="number" id="util-lp-cost" value="6" step="0.5"></div>
+                    <div><label>Cooling Water (°C)</label><input type="number" id="util-cw" value="25"></div>
+                    <div><label>Cooling Water (€/GJ)</label><input type="number" id="util-cw-cost" value="1" step="0.1"></div>
+                </div>
+                <button class="btn-primary" onclick="App.calculateMultiUtilities()">♨️ <span data-i18n="runUtil">تحلیل یوتیلیتی</span></button>
+                <div id="util-results" style="margin-top:20px;"></div>
+                <div id="util-chart" class="chart-container"></div>
+            </section>
+
+            <!-- TAB 8: PROCESS CHANGE -->
+            <section id="tab-process" class="tab-pane">
+                <h2>🔧 <span data-i18n="processTitle">تحلیل تغییر فرآیند</span></h2>
+                <p class="hint" data-i18n="processHint">
+                    Plus-Minus Principle و شناسایی مبدل‌های Cross-Pinch
+                </p>
+
+                <h3 style="color:#2d3748; margin-top:20px;" data-i18n="plusMinus">📊 اصل مثبت-منفی (Plus-Minus)</h3>
+                <div class="form-grid">
+                    <div><label data-i18n="selectStream">انتخاب جریان</label><select id="pm-stream" class="select-input"></select></div>
+                    <div><label data-i18n="newTs">دمای شروع جدید Ts (°C)</label><input type="number" id="pm-ts" value="0"></div>
+                    <div><label data-i18n="newTt">دمای پایان جدید Tt (°C)</label><input type="number" id="pm-tt" value="0"></div>
+                </div>
+                <button class="btn-primary" onclick="App.analyzePlusMinus()">📊 <span data-i18n="runPlusMinus">تحلیل تغییر</span></button>
+                <div id="pm-results" style="margin-top:20px;"></div>
+
+                <hr style="margin:40px 0; border:none; border-top:2px solid #e2e8f0;">
+
+                <h3 style="color:#2d3748;" data-i18n="violators">🚨 شناسایی مبدل‌های Cross-Pinch</h3>
+                <p class="hint" data-i18n="violatorsHint">
+                    مبدل‌های موجود را وارد کنید تا مبدل‌هایی که از پینچ عبور می‌کنند شناسایی شوند.
+                </p>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="exName">نام مبدل</th>
+                                <th data-i18n="exHot">جریان گرم</th>
+                                <th data-i18n="exCold">جریان سرد</th>
+                                <th data-i18n="exQ">Q (kW)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="exchangers-body"></tbody>
+                    </table>
+                </div>
+                <div class="actions">
+                    <button class="btn-primary" onclick="App.addExchanger()">➕ <span data-i18n="addExchanger">افزودن مبدل</span></button>
+                    <button class="btn-success" onclick="App.detectViolators()">🚨 <span data-i18n="detectViolators">شناسایی</span></button>
+                </div>
+                <div id="violators-results" style="margin-top:20px;"></div>
+            </section>
+
+            <!-- TAB 9: EXERGY -->
+            <section id="tab-exergy" class="tab-pane">
+                <h2>♻️ <span data-i18n="exergyTitle">تحلیل اکسرژی</span></h2>
+                <div id="exergy-metrics" class="metrics"></div>
+                <div class="actions">
+                    <button class="btn-primary" onclick="App.exportTableCSV('exergy')">📥 <span data-i18n="exportCSV">خروجی CSV</span></button>
+                </div>
+                <div id="exergy-table-wrap" class="table-wrap"></div>
+            </section>
+
+            <!-- TAB 10: EQUIPMENT -->
+            <section id="tab-equip" class="tab-pane">
+                <h2>⚙️ <span data-i18n="equipTitle">جای‌گذاری تجهیزات</span></h2>
+                <select id="equip-select" class="select-input" onchange="App.renderEquip()">
+                    <option value="furnace" data-i18n="optFurnace">🔥 کوره</option>
+                    <option value="turbine" data-i18n="optTurbine">⚙️ توربین</option>
+                    <option value="heatpump" data-i18n="optHeatpump">♻️ پمپ حرارتی</option>
+                    <option value="distillation" data-i18n="optDistillation">🏗️ برج تقطیر</option>
+                </select>
+                <div id="equip-chart" class="chart-container"></div>
+                <div id="equip-note" class="hint" style="margin-top:15px;"></div>
+            </section>
+
+            <!-- TAB 11: DISTILLATION -->
+            <section id="tab-dist" class="tab-pane">
+                <h2>🏗️ <span data-i18n="distTitle">تحلیل برج تقطیر (Split GCC)</span></h2>
+                <div class="form-grid">
+                    <div><label data-i18n="distTreb">دمای ریبویلر (°C)</label><input type="number" id="dist-treb" value="120" onchange="App.renderDist()"></div>
+                    <div><label data-i18n="distTcon">دمای کندانسور (°C)</label><input type="number" id="dist-tcon" value="60" onchange="App.renderDist()"></div>
+                    <div><label data-i18n="distQreb">بار ریبویلر (kW)</label><input type="number" id="dist-qreb" value="100" onchange="App.renderDist()"></div>
+                    <div><label data-i18n="distQcon">بار کندانسور (kW)</label><input type="number" id="dist-qcon" value="100" onchange="App.renderDist()"></div>
+                </div>
+                <div id="dist-note" class="hint" style="margin-top:15px;"></div>
+                <div id="dist-chart" class="chart-container"></div>
+            </section>
+
+            <!-- TAB 12: CHP -->
+            <section id="tab-chp" class="tab-pane">
+                <h2>⚡ <span data-i18n="chpTitle">تحلیل CHP</span></h2>
+                <div class="form-grid">
+                    <div><label data-i18n="chpHeat">تقاضای حرارت (kW)</label><input type="number" id="chp-heat" value="500"></div>
+                    <div><label data-i18n="chpPower">تقاضای برق (kW)</label><input type="number" id="chp-power" value="1000"></div>
+                    <div><label data-i18n="chpFuel">هزینه سوخت (€/kWh)</label><input type="number" id="chp-fuel" value="0.03" step="0.001"></div>
+                    <div><label data-i18n="chpElec">قیمت برق (€/kWh)</label><input type="number" id="chp-elec" value="0.10" step="0.001"></div>
+                    <div><label data-i18n="chpBoiler">راندمان بویلر</label><input type="number" id="chp-boiler" value="0.80" step="0.01"></div>
+                    <div><label data-i18n="chpElecEff">راندمان الکتریکی CHP</label><input type="number" id="chp-elec-eff" value="0.35" step="0.01"></div>
+                    <div><label data-i18n="chpHeatEff">راندمان حرارتی CHP</label><input type="number" id="chp-heat-eff" value="0.50" step="0.01"></div>
+                </div>
+                <button class="btn-success" onclick="App.calcCHP()">🧮 <span data-i18n="calcCHP">محاسبه CHP</span></button>
+                <div id="chp-results" style="margin-top:20px;"></div>
+            </section>
+
+            <!-- TAB 13: REFRIGERATION & WATER -->
+            <section id="tab-ref" class="tab-pane">
+                <h2>❄️ <span data-i18n="refTitle">تحلیل تبرید</span></h2>
+                <div class="form-grid">
+                    <div><label data-i18n="refLoad">بار سرمایشی (kW)</label><input type="number" id="ref-load" value="100"></div>
+                    <div><label data-i18n="refTproc">دمای فرآیند (°C)</label><input type="number" id="ref-tproc" value="-20"></div>
+                    <div><label data-i18n="refTamb">دمای محیط (°C)</label><input type="number" id="ref-tamb" value="25"></div>
+                    <div><label data-i18n="refdTevap">ΔT اواپراتور (K)</label><input type="number" id="ref-dtevap" value="5"></div>
+                    <div><label data-i18n="refdTcond">ΔT کندانسور (K)</label><input type="number" id="ref-dtcond" value="10"></div>
+                    <div><label data-i18n="refEta">راندمان آیزنتروپیک</label><input type="number" id="ref-eta" value="0.70" step="0.01"></div>
+                </div>
+                <button class="btn-success" onclick="App.calcRef()">🧮 <span data-i18n="calcRef">محاسبه تبرید</span></button>
+                <div id="ref-results" style="margin-top:20px;"></div>
+
+                <hr style="margin:40px 0; border:none; border-top:2px solid #e2e8f0;">
+
+                <h2>💧 <span data-i18n="waterTitle">پینچ آب</span></h2>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Name</th><th>Flow (t/h)</th><th>Cin</th><th>Cout</th></tr></thead>
+                        <tbody>
+                            <tr><td><input id="w1-name" value="W1"></td><td><input id="w1-flow" type="number" value="10"></td><td><input id="w1-cin" type="number" value="0.01" step="0.001"></td><td><input id="w1-cout" type="number" value="0.05" step="0.001"></td></tr>
+                            <tr><td><input id="w2-name" value="W2"></td><td><input id="w2-flow" type="number" value="20"></td><td><input id="w2-cin" type="number" value="0.05" step="0.001"></td><td><input id="w2-cout" type="number" value="0.10" step="0.001"></td></tr>
+                            <tr><td><input id="w3-name" value="W3"></td><td><input id="w3-flow" type="number" value="5"></td><td><input id="w3-cin" type="number" value="0.02" step="0.001"></td><td><input id="w3-cout" type="number" value="0.08" step="0.001"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn-success" onclick="App.calcWater()">💧 <span data-i18n="calcWater">تحلیل پینچ آب</span></button>
+                <div id="water-results" style="margin-top:20px;"></div>
+            </section>
+
+            <!-- TAB 14: REPORT -->
+            <section id="tab-report" class="tab-pane">
+                <h2>📄 <span data-i18n="reportTitle">گزارش جامع</span></h2>
+                <div class="actions" style="margin-bottom:20px;">
+                    <button class="btn-primary" onclick="App.generateReport()">📋 <span data-i18n="genReport">تولید گزارش</span></button>
+                    <button class="btn-success" onclick="App.printReport()">🖨️ <span data-i18n="savePDF">ذخیره PDF</span></button>
+                </div>
+                <div id="report-status"></div>
+                <div id="report-content" style="margin-top:25px;"></div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<footer class="footer">
+    <p>🏭 <strong>Pinch Master Pro v8.0</strong></p>
+    <p class="author-line">Developed by <strong>Hossein Sahraei</strong></p>
+    <p style="font-size:0.8rem; margin-top:8px; opacity:0.7;">Based on Kemp · Smith · Linnhoff · Omidkhah</p>
+</footer>
+
+<!-- Help Modal -->
+<div id="help-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="App.closeHelp()">&times;</span>
+        <h2>📖 Pinch Master Pro v8.0 — Help</h2>
+        <div id="help-content"></div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js').catch(err => console.log('[PWA]', err));
+        });
+    }
+</script>
+
+</body>
+</html>
